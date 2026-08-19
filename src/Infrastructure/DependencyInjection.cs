@@ -1,5 +1,7 @@
 ﻿using EnterpriseLicenseSystem.Application.Common.Interfaces;
+using EnterpriseLicenseSystem.Application.Common.Models;
 using EnterpriseLicenseSystem.Domain.Constants;
+using EnterpriseLicenseSystem.Infrastructure.BackgroundJobs;
 using EnterpriseLicenseSystem.Infrastructure.Data;
 using EnterpriseLicenseSystem.Infrastructure.Data.Interceptors;
 using EnterpriseLicenseSystem.Infrastructure.Identity;
@@ -20,6 +22,14 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
+        builder.Services.AddScoped<ISaveChangesInterceptor, SoftDeleteInterceptor>();
+
+        builder.Services.AddOptions<LicenseSettings>()
+            .Bind(builder.Configuration.GetSection(LicenseSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services.AddHostedService<LicenseExpirationCheckService>();
 
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
@@ -42,7 +52,8 @@ public static class DependencyInjection
             .AddIdentityCore<ApplicationUser>()
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddApiEndpoints();
+            .AddApiEndpoints()
+            .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<ApplicationUser, IdentityRole>>();
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();

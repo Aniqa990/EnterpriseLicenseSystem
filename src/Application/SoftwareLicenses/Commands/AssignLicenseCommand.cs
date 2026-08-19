@@ -2,6 +2,7 @@
 using EnterpriseLicenseSystem.Application.Common.Interfaces;
 using EnterpriseLicenseSystem.Application.Common.Exceptions;
 using EnterpriseLicenseSystem.Domain.Entities;
+using EnterpriseLicenseSystem.Domain.Events;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +54,10 @@ public class AssignLicenseCommandHandler : IRequestHandler<AssignLicenseCommand,
 
         license.AllocatedSeats++;
         _context.LicenseAssignments.Add(assignment);
+
+        // Domain Events Pattern: decouple the write (seat allocation) from side effects
+        // (notification/audit) — handled asynchronously by LicenseAssignedEventHandler.
+        license.AddDomainEvent(new LicenseAssignedEvent(assignment));
 
         try
         {

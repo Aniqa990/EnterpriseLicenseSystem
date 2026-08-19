@@ -1,28 +1,37 @@
 ﻿# For more info on HTTP files go to https://aka.ms/vs/httpfile
 @Web_HostAddress = https://localhost:5001
 
-@Email=administrator@localhost
-@Password=Administrator1!
-@BearerToken=<YourToken>
+@BearerToken=CfDJ8DE_Gb_JiH5CvgVNkyWDQRgkYeBFA-VaWfRodmokRRWjTFYFVmE6-2zneDVfA451HHbXvVT8SJy_qO78eK54e3vXEsnBlnBk6uS5lSR1WEmilaKE39Y_6Kwo0h1nzNlm7nYFUsMi-mbmiQqt9Ujvdy069GQbC-ty937nCfgJMSC-AHV8Pn_qLnH-wxub959dNfa1FmFQIMYbJ-xh6G6oW6mRsLC5MFggHqPXySGkCajExRHnf7UFsq8FAv9HYrawX3XKq3coLsyiSIaYPlPvf1C7NR6vdrBaAcOHTARSTdlCur-46UR4Itn7Xc5xs82db1SGrig8Si8mXY2QEiEc2p08FcoRb2PmbY6GlMrDBl4W5-T6hPEV7P8HzmlZq7rF81c0TO4Qp-adjfQqCLibDTkZ16U2phZkFslf-4bnEGdOGI2trqSjDcSsbj8CSyhm3vMLkLMyBW9cOuA5jxQPrA1RXQqWuFeG5URWoq2xxP6ksfmAnte49md0J0aYYf8WN_VpevT9ciCOJ-fvm5Dsy8mRVWaTKj4nPqHp_wPCO_Rj1BsBdGsNzMUlD7nraKVy0K1GhmjiW-PjDfb4By_WwaikVpWu13CMhyelgwtHvzyjvE-Gnso3EiozMpHfpJMLY5YJ28UBaqgVwd81fHvIc3R6QOc846Z9eX5BUJiadW3NrQyntSK6kkGnQzXAs_jXl-cTO8VIn9xmU-AKb85sWvMGUfG_Jb7DR9h8lYDzW-uwnEAtUVCDzl6jPUMIJYx-GNNWZhgrZpCDGxeY-VtUcEfqOIqOvjLuqqiSFr_03B-5Z5o8BraVVuBKp1VaUjnCFQ
 
 # POST Users Register
-POST {{Web_HostAddress}}/api/Users/Register
+POST {{Web_HostAddress}}/api/register
 Content-Type: application/json
 
 {
-  "email": "{{Email}}",
-  "password": "{{Password}}"
+  "email": "admin@company.com",
+  "password": "Admin123!"
 }
 
 ###
 
 # POST Users Login
-POST {{Web_HostAddress}}/api/Users/Login
+POST {{Web_HostAddress}}/api/login
 Content-Type: application/json
 
 {
-  "email": "{{Email}}",
-  "password": "{{Password}}"
+  "email": "manager@company.com",
+  "password": "Manager123!"
+}
+###
+# POST Assign Role (Admin only)
+# MapIdentityApi routes group this under /api/Users or /users depending on MapEndpoints setup
+POST {{Web_HostAddress}}/api/Users/assign-role
+Authorization: Bearer {{BearerToken}}
+Content-Type: application/json
+
+{
+  "userId": "TARGET_USER_ID_HERE",
+  "role": "LicenseManager"
 }
 
 ###
@@ -37,6 +46,89 @@ Content-Type: application/json
 }
 
 ###
+
+# POST Create a Software License (Admin/LicenseManager only)
+POST {{Web_HostAddress}}/api/SoftwareLicenses
+Authorization: Bearer {{BearerToken}}
+Content-Type: application/json
+
+{
+  "name": "JetBrains ReSharper",
+  "licenseKey": "JB-2026-000123",
+  "totalSeats": 5,
+  "expirationDate": "2027-01-01T00:00:00Z"
+}
+
+###
+
+# GET Software Licenses (paginated)
+GET {{Web_HostAddress}}/api/SoftwareLicenses?PageNumber=1&PageSize=10
+Authorization: Bearer {{BearerToken}}
+
+###
+
+# PUT Assign a license seat to a user (use the license id from the create response, and any user's id)
+PUT {{Web_HostAddress}}/api/SoftwareLicenses/1/assign?userId=3a8b4c2d-1111-2222-3333-444455556666
+Authorization: Bearer {{BearerToken}}
+
+###
+
+# PUT Revoke a license seat (Result pattern: 200 on success, 400 { errors: [...] } on failure)
+PUT {{Web_HostAddress}}/api/SoftwareLicenses/1/revoke?userId=<UserIdHere>
+Authorization: Bearer {{BearerToken}}
+
+
+###
+
+# POST Create an Asset (Admin/LicenseManager only)
+POST {{Web_HostAddress}}/api/Assets
+Authorization: Bearer {{BearerToken}}
+Content-Type: application/json
+
+{
+  "model": "Dell Latitude 7440",
+  "serialNumber": "SN-0001"
+}
+
+###
+
+# GET Assets (paginated)
+GET {{Web_HostAddress}}/api/Assets?PageNumber=1&PageSize=10
+Authorization: Bearer {{BearerToken}}
+
+###
+
+# PUT Update an Asset
+PUT {{Web_HostAddress}}/api/Assets/1
+Authorization: Bearer {{BearerToken}}
+Content-Type: application/json
+
+{
+  "id": 1,
+  "model": "Dell Latitude 7450",
+  "serialNumber": "SN-0001-REV2"
+}
+
+###
+
+# PUT Assign an Asset to a user
+PUT {{Web_HostAddress}}/api/Assets/1/assign?userId=<UserIdHere>
+Authorization: Bearer {{BearerToken}}
+
+###
+
+# PUT Unassign an Asset
+PUT {{Web_HostAddress}}/api/Assets/1/unassign
+Authorization: Bearer {{BearerToken}}
+
+###
+
+# DELETE an Asset (Admin only — soft delete, row is retained with IsDeleted = true)
+DELETE {{Web_HostAddress}}/api/Assets/1
+Authorization: Bearer {{BearerToken}}
+
+
+### =========================================================================
 
 # GET WeatherForecast
 GET {{Web_HostAddress}}/api/WeatherForecasts
@@ -55,85 +147,8 @@ POST {{Web_HostAddress}}/api/TodoLists
 Authorization: Bearer {{BearerToken}}
 Content-Type: application/json
 
-// CreateTodoListCommand
 {
   "Title": "Backlog"
 }
-
-###
-
-# PUT TodoLists
-PUT {{Web_HostAddress}}/api/TodoLists/1
-Authorization: Bearer {{BearerToken}}
-Content-Type: application/json
-
-// UpdateTodoListCommand
-{
-  "Id": 1,
-  "Title": "Product Backlog"
-}
-
-###
-
-# DELETE TodoLists
-DELETE {{Web_HostAddress}}/api/TodoLists/1
-Authorization: Bearer {{BearerToken}}
-
-###
-
-# GET TodoItems
-@PageNumber = 1
-@PageSize = 10
-GET {{Web_HostAddress}}/api/TodoItems?ListId=1&PageNumber={{PageNumber}}&PageSize={{PageSize}}
-
-Authorization: Bearer {{BearerToken}}
-
-###
-
-# POST TodoItems
-POST {{Web_HostAddress}}/api/TodoItems
-Authorization: Bearer {{BearerToken}}
-Content-Type: application/json
-
-// CreateTodoItemCommand
-{
-  "ListId": 1,
-  "Title": "Eat a burrito 🌯"
-}
-
-###
-
-#PUT TodoItems UpdateItemDetails
-PUT {{Web_HostAddress}}/api/TodoItems/UpdateItemDetails?Id=1
-Authorization: Bearer {{BearerToken}}
-Content-Type: application/json
-
-// UpdateTodoItemDetailCommand
-{
-  "Id": 1,
-  "ListId": 1,
-  "Priority": 3,
-  "Note": "This is a good idea!"
-}
-
-###
-
-# PUT TodoItems
-PUT {{Web_HostAddress}}/api/TodoItems/1
-Authorization: Bearer {{BearerToken}}
-Content-Type: application/json
-
-// UpdateTodoItemCommand
-{
-  "Id": 1,
-  "Title": "Eat a yummy burrito 🌯",
-  "Done": true
-}
-
-###
-
-# DELETE TodoItem
-DELETE {{Web_HostAddress}}/api/TodoItems/1
-Authorization: Bearer {{BearerToken}}
 
 ###

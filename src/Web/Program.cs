@@ -1,6 +1,16 @@
 using EnterpriseLicenseSystem.Infrastructure.Data;
+using EnterpriseLicenseSystem.Web.Infrastructure;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .WriteTo.Console(outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {CorrelationId} {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.AddKeyVaultIfConfigured();
@@ -29,8 +39,11 @@ else
 }
 
 app.UseHealthChecks("/health");
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseCorrelationId();     // <-- add, before the exception handler
+app.UseRateLimiter();       // <-- add
 
 app.UseSwaggerUi(settings =>
 {
@@ -38,13 +51,9 @@ app.UseSwaggerUi(settings =>
     settings.DocumentPath = "/api/specification.json";
 });
 
-
 app.UseExceptionHandler(options => { });
 
 app.Map("/", () => Results.Redirect("/api"));
-
 app.MapEndpoints();
 
 app.Run();
-
-public partial class Program { }

@@ -1,6 +1,7 @@
 ﻿using Azure.Identity;
 using EnterpriseLicenseSystem.Application.Common.Interfaces;
 using EnterpriseLicenseSystem.Infrastructure.Data;
+using EnterpriseLicenseSystem.Infrastructure.Identity;
 using EnterpriseLicenseSystem.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,8 @@ public static class DependencyInjection
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
         builder.Services.AddScoped<IUser, CurrentUser>();
-
+        builder.Services.AddApiRateLimiting();
+        builder.Services.AddTransient<ITokenGenerator, TokenGenerator>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddHealthChecks()
             .AddDbContextCheck<ApplicationDbContext>();

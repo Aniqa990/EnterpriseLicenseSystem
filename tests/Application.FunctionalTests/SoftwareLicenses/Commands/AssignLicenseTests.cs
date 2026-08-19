@@ -1,5 +1,4 @@
-﻿
-using EnterpriseLicenseSystem.Application.SoftwareLicenses.Commands.AssignLicenseCommand;
+﻿using EnterpriseLicenseSystem.Application.SoftwareLicenses.Commands.AssignLicenseCommand;
 using EnterpriseLicenseSystem.Application.SoftwareLicenses.Commands.CreateSoftwareLicenseCommand;
 using EnterpriseLicenseSystem.Domain.Entities;
 
@@ -22,7 +21,7 @@ public class AssignLicenseTests : BaseTestFixture
             ExpirationDate = DateTime.UtcNow.AddYears(1)
         });
 
-        var result = await SendAsync(new AssignLicenseCommand(licenseId));
+        var result = await SendAsync(new AssignLicenseCommand { LicenseId = licenseId });
 
         result.ShouldBeTrue();
         var item = await FindAsync<SoftwareLicense>(licenseId);
@@ -35,7 +34,6 @@ public class AssignLicenseTests : BaseTestFixture
     {
         await RunAsDefaultUserAsync();
 
-
         var licenseId = await SendAsync(new CreateSoftwareLicenseCommand
         {
             Name = "Single User License",
@@ -44,8 +42,9 @@ public class AssignLicenseTests : BaseTestFixture
             ExpirationDate = DateTime.UtcNow.AddYears(1)
         });
 
-        await SendAsync(new AssignLicenseCommand(licenseId));
+        await SendAsync(new AssignLicenseCommand { LicenseId = licenseId });
 
-        await Should.ThrowAsync<InvalidOperationException>(() => SendAsync(new AssignLicenseCommand(licenseId)));
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            SendAsync(new AssignLicenseCommand { LicenseId = licenseId }));
     }
 }

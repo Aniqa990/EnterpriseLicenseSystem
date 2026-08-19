@@ -12,5 +12,7 @@ public interface IIdentityService
 
     Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password);
 
+    Task<Result> AddToRolesAsync(string userId, IEnumerable<string> roles);
+
     Task<Result> DeleteUserAsync(string userId);
 }
